@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "user_id": 3,
+    "station_id": 7,
+    "timestamp": "2025-07-22T14:19:45.471894"
+  },
+  {
+    "id": 2,
+    "user_id": 2,
+    "station_id": 2,
+    "timestamp": "2025-07-18T23:19:45.471894"
+  },
+  {
+    "id": 3,
+    "user_id": 1,
+    "station_id": 8,
+    "timestamp": "2025-07-22T19:19:45.471894"
+  },
+  {
+    "id": 4,
+    "user_id": 2,
+    "station_id": 2,
+    "timestamp": "2025-07-18T22:19:45.471894"
+  },
+  {
+    "id": 5,
+    "user_id": 2,
+    "station_id": 7,
+    "timestamp": "2025-08-04T20:19:45.471894"
+  },
+  {
+    "id": 6,
+    "user_id": 2,
+    "station_id": 8,
+    "timestamp": "2025-07-29T01:19:45.471894"
+  },
+  {
+    "id": 7,
+    "user_id": 1,
+    "station_id": 8,
+    "timestamp": "2025-07-14T11:19:45.471894"
+  },
+  {
+    "id": 8,
+    "user_id": 1,
+    "station_id": 4,
+    "timestamp": "2025-08-02T03:19:45.471894"
+  },
+  {
+    "id": 9,
+    "user_id": 3,
+    "station_id": 4,
+    "timestamp": "2025-07-30T00:19:45.471894"
+  },
+  {
+    "id": 10,
+    "user_id": 3,
+    "station_id": 2,
+    "timestamp": "2025-07-18T09:19:45.471894"
+  },
+  {
+    "id": 11,
+    "user_id": 2,
+    "station_id": 2,
+    "timestamp": "2025-07-22T02:19:45.471894"
+  },
+  {
+    "id": 12,
+    "user_id": 3,
+    "station_id": 8,
+    "timestamp": "2025-08-02T11:19:45.471894"
+  },
+  {
+    "id": 13,
+    "user_id": 2,
+    "station_id": 1,
+    "timestamp": "2025-07-26T03:19:45.471894"
+  },
+  {
+    "id": 14,
+    "user_id": 2,
+    "station_id": 1,
+    "timestamp": "2025-07-08T11:19:45.471894"
+  },
+  {
+    "id": 15,
+    "user_id": 3,
+    "station_id": 6,
+    "timestamp": "2025-08-01T03:19:45.471894"
+  },
+  {
+    "id": 16,
+    "user_id": 1,
+    "station_id": 8,
+    "timestamp": "2025-07-06T21:19:45.471894"
+  },
+  {
+    "id": 17,
+    "user_id": 2,
+    "station_id": 6,
+    "timestamp": "2025-07-20T16:19:45.471894"
+  },
+  {
+    "id": 18,
+    "user_id": 3,
+    "station_id": 7,
+    "timestamp": "2025-07-25T05:19:45.471894"
+  },
+  {
+    "id": 19,
+    "user_id": 2,
+    "station_id": 8,
+    "timestamp": "2025-08-03T20:19:45.471894"
+  },
+  {
+    "id": 20,
+    "user_id": 2,
+    "station_id": 3,
+    "timestamp": "2025-07-11T16:19:45.471894"
+  },
+  {
+    "id": 21,
+    "user_id": 1,
+    "station_id": 6,
+    "timestamp": "2025-08-05T14:34:03.304Z"
+  }
+]

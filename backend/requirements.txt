@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+snowflake-connector-python
+numpy
+scikit-learn
+requests
+python-multipart

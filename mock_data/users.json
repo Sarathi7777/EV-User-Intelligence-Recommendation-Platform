@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "email": "user1@example.com",
+    "password_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+    "eco_score": 85.5
+  },
+  {
+    "id": 2,
+    "email": "user2@example.com",
+    "password_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+    "eco_score": 72.3
+  },
+  {
+    "id": 3,
+    "email": "admin@example.com",
+    "password_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+    "eco_score": 90.0
+  }
+]
