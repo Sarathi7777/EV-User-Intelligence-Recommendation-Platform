@@ -20,6 +20,7 @@ const Login = ({ onLogin }) => {
       
       if (res.ok) {
         const data = await res.json();
+        localStorage.setItem('user', JSON.stringify(data)); // persist user
         onLogin(data);
       } else {
         alert("Invalid credentials. Please try again.");

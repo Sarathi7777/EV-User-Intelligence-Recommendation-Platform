@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import HomePage from './components/HomePage';
@@ -105,12 +105,22 @@ const Navigation = ({ user, onLogout }) => {
 const App = () => {
   const [user, setUser] = useState(null);
 
+  // Restore user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const handleLogin = (userData) => {
     setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('user');
   };
 
   if (!user) {
