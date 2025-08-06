@@ -19,55 +19,17 @@ const MapPage = ({ user }) => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [userLocation, setUserLocation] = useState([37.7749, -122.4194]);
   const [isLoadingNearby, setIsLoadingNearby] = useState(false);
-  const wsRef = useRef(null);
+
 
   useEffect(() => {
     fetchStations();
     fetchUsers();
     getUserLocation();
-    // WebSocket setup
-    wsRef.current = new WebSocket('ws://localhost:8000/map/ws/user-locations');
-    wsRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'user_location') {
-          setUsers((prev) => {
-            // Update or add user location
-            const idx = prev.findIndex(u => u.user_id === data.user_id);
-            if (idx !== -1) {
-              const updated = [...prev];
-              updated[idx] = { ...updated[idx], ...data };
-              return updated;
-            } else {
-              return [...prev, data];
-            }
-          });
-          toast.info(`User ${data.email || data.user_id} updated location!`);
-        }
-        if (data.type === 'help_request') {
-          toast.warn(`Help request: ${data.message}`);
-        }
-      } catch (e) {}
-    };
-    wsRef.current.onerror = () => toast.error('WebSocket error!');
-    wsRef.current.onclose = () => toast.info('WebSocket disconnected');
-    return () => { wsRef.current && wsRef.current.close(); };
   }, []);
 
   useEffect(() => {
     if (userLocation[0] !== 37.7749 || userLocation[1] !== -122.4194) {
       fetchNearbyStations();
-      // Send location to WebSocket
-      if (wsRef.current && wsRef.current.readyState === 1) {
-        wsRef.current.send(JSON.stringify({
-          type: 'user_location',
-          user_id: user.id,
-          email: user.email,
-          latitude: userLocation[0],
-          longitude: userLocation[1],
-          status: 'active',
-        }));
-      }
     }
   }, [userLocation, filters.distance]);
 
@@ -329,113 +291,117 @@ const MapPage = ({ user }) => {
             </CircleMarker>
 
             {/* Regular Charging Stations */}
-            {getFilteredStations().map((station) => (
-              <Marker 
-                key={station.id} 
-                position={[station.latitude, station.longitude]}
-                icon={getStationIcon(station)}
-                eventHandlers={{
-                  click: () => handleStationClick(station)
-                }}
-              >
-                <Popup>
-                  <div style={{ minWidth: '200px' }}>
-                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#28a745' }}>
-                      {station.name}
-                    </h3>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Type:</strong> {station.energy_type}
-                    </p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Status:</strong> 
-                      <span style={{ 
-                        color: station.available ? '#28a745' : '#dc3545',
-                        fontWeight: 'bold'
-                      }}>
-                        {station.available ? ' Available' : ' Occupied'}
-                      </span>
-                    </p>
-                    <button 
-                      onClick={() => startCharging(station.id)}
-                      disabled={!station.available}
-                      style={{ 
-                        padding: '0.5rem 1rem', 
-                        backgroundColor: station.available ? '#28a745' : '#6c757d',
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '4px',
-                        cursor: station.available ? 'pointer' : 'not-allowed',
-                        width: '100%'
-                      }}
-                    >
-                      {station.available ? 'Start Charging' : 'Currently Occupied'}
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {getFilteredStations()
+              .filter(station => station.latitude !== undefined && station.longitude !== undefined)
+              .map((station) => (
+                <Marker 
+                  key={station.id} 
+                  position={[station.latitude, station.longitude]}
+                  icon={getStationIcon(station)}
+                  eventHandlers={{
+                    click: () => handleStationClick(station)
+                  }}
+                >
+                  <Popup>
+                    <div style={{ minWidth: '200px' }}>
+                      <h3 style={{ margin: '0 0 0.5rem 0', color: '#28a745' }}>
+                        {station.name}
+                      </h3>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Type:</strong> {station.energy_type}
+                      </p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Status:</strong> 
+                        <span style={{ 
+                          color: station.available ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold'
+                        }}>
+                          {station.available ? ' Available' : ' Occupied'}
+                        </span>
+                      </p>
+                      <button 
+                        onClick={() => startCharging(station.id)}
+                        disabled={!station.available}
+                        style={{ 
+                          padding: '0.5rem 1rem', 
+                          backgroundColor: station.available ? '#28a745' : '#6c757d',
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px',
+                          cursor: station.available ? 'pointer' : 'not-allowed',
+                          width: '100%'
+                        }}
+                      >
+                        {station.available ? 'Start Charging' : 'Currently Occupied'}
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
             {/* Nearby Stations */}
-            {filters.showNearby && getFilteredNearbyStations().map((station) => (
-              <Marker 
-                key={station.id} 
-                position={[station.latitude, station.longitude]}
-                icon={getNearbyStationIcon(station)}
-                eventHandlers={{
-                  click: () => handleStationClick(station)
-                }}
-              >
-                <Popup>
-                  <div style={{ minWidth: '250px' }}>
-                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#007bff' }}>
-                      {station.name}
-                    </h3>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Type:</strong> {station.energy_type}
-                    </p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Distance:</strong> {station.distance_km} km
-                    </p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Travel Time:</strong> {formatTime(station.travel_time_minutes)}
-                    </p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Source:</strong> 
-                      <span style={{ 
-                        color: station.source === 'ocm' ? '#007bff' : '#28a745',
-                        fontWeight: 'bold'
-                      }}>
-                        {station.source === 'ocm' ? ' Open Charge Map' : ' Local Database'}
-                      </span>
-                    </p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}>
-                      <strong>Status:</strong> 
-                      <span style={{ 
-                        color: station.available ? '#28a745' : '#dc3545',
-                        fontWeight: 'bold'
-                      }}>
-                        {station.available ? ' Available' : ' Occupied'}
-                      </span>
-                    </p>
-                    <button 
-                      onClick={() => startCharging(station.id)}
-                      disabled={!station.available}
-                      style={{ 
-                        padding: '0.5rem 1rem', 
-                        backgroundColor: station.available ? '#28a745' : '#6c757d',
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '4px',
-                        cursor: station.available ? 'pointer' : 'not-allowed',
-                        width: '100%'
-                      }}
-                    >
-                      {station.available ? 'Start Charging' : 'Currently Occupied'}
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {filters.showNearby && getFilteredNearbyStations()
+              .filter(station => station.latitude !== undefined && station.longitude !== undefined)
+              .map((station) => (
+                <Marker 
+                  key={station.id} 
+                  position={[station.latitude, station.longitude]}
+                  icon={getNearbyStationIcon(station)}
+                  eventHandlers={{
+                    click: () => handleStationClick(station)
+                  }}
+                >
+                  <Popup>
+                    <div style={{ minWidth: '250px' }}>
+                      <h3 style={{ margin: '0 0 0.5rem 0', color: '#007bff' }}>
+                        {station.name}
+                      </h3>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Type:</strong> {station.energy_type}
+                      </p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Distance:</strong> {station.distance_km} km
+                      </p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Travel Time:</strong> {formatTime(station.travel_time_minutes)}
+                      </p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Source:</strong> 
+                        <span style={{ 
+                          color: station.source === 'ocm' ? '#007bff' : '#28a745',
+                          fontWeight: 'bold'
+                        }}>
+                          {station.source === 'ocm' ? ' Open Charge Map' : ' Local Database'}
+                        </span>
+                      </p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>
+                        <strong>Status:</strong> 
+                        <span style={{ 
+                          color: station.available ? '#28a745' : '#dc3545',
+                          fontWeight: 'bold'
+                        }}>
+                          {station.available ? ' Available' : ' Occupied'}
+                        </span>
+                      </p>
+                      <button 
+                        onClick={() => startCharging(station.id)}
+                        disabled={!station.available}
+                        style={{ 
+                          padding: '0.5rem 1rem', 
+                          backgroundColor: station.available ? '#28a745' : '#6c757d',
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px',
+                          cursor: station.available ? 'pointer' : 'not-allowed',
+                          width: '100%'
+                        }}
+                      >
+                        {station.available ? 'Start Charging' : 'Currently Occupied'}
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
             {/* Other Users */}
             {filters.showUsers && users.map((otherUser) => (

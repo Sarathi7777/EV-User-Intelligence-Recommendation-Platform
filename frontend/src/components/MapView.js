@@ -20,15 +20,17 @@ const MapView = () => {
         attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {stations.map((station) => (
-        <Marker key={station.id} position={[station.latitude, station.longitude]}>
-          <Popup>
-            <b>{station.name}</b><br />
-            Energy: {station.energy_type}<br />
-            {station.available ? "Available" : "Occupied"}
-          </Popup>
-        </Marker>
-      ))}
+      {stations
+        .filter(station => station.latitude !== undefined && station.longitude !== undefined)
+        .map((station) => (
+          <Marker key={station.id} position={[station.latitude, station.longitude]}>
+            <Popup>
+              <b>{station.name}</b><br />
+              Energy: {station.energy_type}<br />
+              {station.available ? "Available" : "Occupied"}
+            </Popup>
+          </Marker>
+        ))}
     </MapContainer>
   );
 };
