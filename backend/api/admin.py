@@ -3,6 +3,8 @@ import json
 import os
 # from backend.models.schemas import Station, UserResponse
 from models.schemas import Station, UserResponse
+from db.snowflake_connector import get_snowflake_manager
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -81,3 +83,49 @@ def delete_station(station_id: int):
     except Exception as e:
         print(f"Error deleting station: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete station") 
+
+@router.get("/analytics/user-growth")
+def user_growth(days: int = 30):
+    """Return user registration count per day for the last N days."""
+    manager = get_snowflake_manager()
+    if not manager:
+        raise HTTPException(status_code=503, detail="Snowflake not available")
+    query = f'''
+        SELECT TO_DATE(created_at) as date, COUNT(*) as count
+        FROM users
+        WHERE created_at >= DATEADD(day, -{days}, CURRENT_DATE())
+        GROUP BY date
+        ORDER BY date
+    '''
+    return manager.execute_query(query)
+
+@router.get("/analytics/session-stats")
+def session_stats(days: int = 30):
+    """Return session count and total energy per day for the last N days."""
+    manager = get_snowflake_manager()
+    if not manager:
+        raise HTTPException(status_code=503, detail="Snowflake not available")
+    query = f'''
+        SELECT TO_DATE(start_time) as date, COUNT(*) as sessions, SUM(energy_consumed_kwh) as total_energy
+        FROM sessions
+        WHERE start_time >= DATEADD(day, -{days}, CURRENT_DATE())
+        GROUP BY date
+        ORDER BY date
+    '''
+    return manager.execute_query(query)
+
+@router.get("/analytics/station-usage")
+def station_usage(top: int = 5):
+    """Return top N stations by total sessions."""
+    manager = get_snowflake_manager()
+    if not manager:
+        raise HTTPException(status_code=503, detail="Snowflake not available")
+    query = f'''
+        SELECT s.id, s.name, COUNT(sess.id) as total_sessions
+        FROM stations s
+        LEFT JOIN sessions sess ON s.id = sess.station_id
+        GROUP BY s.id, s.name
+        ORDER BY total_sessions DESC
+        LIMIT {top}
+    '''
+    return manager.execute_query(query) 

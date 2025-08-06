@@ -1,62 +1,80 @@
-from fastapi import APIRouter, Body, Query, HTTPException
-from typing import List, Optional
+from fastapi import APIRouter, Body, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
+from typing import List, Set
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from db.snowflake_connector import get_snowflake_manager
+from models.schemas import UserLocationIn, UserLocationOut, EVStoreOut, FloatingServiceOut
 
 router = APIRouter(prefix="/map", tags=["MapFeatures"])
 
-@router.post("/user-location")
-def update_user_location(
-    user_id: int = Body(...),
-    latitude: float = Body(...),
-    longitude: float = Body(...),
-    status: str = Body('active'),
-    message: Optional[str] = Body(None),
-    contact_method: Optional[str] = Body(None)
-):
-    """Update or insert the current user's location."""
+# In-memory set of connected WebSocket clients
+active_connections: Set[WebSocket] = set()
+
+@router.post("/user-location", response_model=dict)
+def update_user_location(payload: UserLocationIn, response: Response):
     manager = get_snowflake_manager()
     if not manager:
         raise HTTPException(status_code=503, detail="Snowflake not available")
-    manager.upsert_user_location(user_id, latitude, longitude, status, message, contact_method)
+    manager.upsert_user_location(
+        user_id=payload.user_id,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        status=payload.status,
+        message=payload.message,
+        contact_method=payload.contact_method
+    )
     return {"success": True}
 
-@router.get("/nearby-users")
+@router.get("/nearby-users", response_model=List[UserLocationOut])
 def get_nearby_users(
-    latitude: float = Query(...),
-    longitude: float = Query(...),
-    radius_km: float = Query(10)
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_km: float = Query(10, gt=0, le=100)
 ):
-    """Get users within a radius (km) of a location."""
     manager = get_snowflake_manager()
     if not manager:
         raise HTTPException(status_code=503, detail="Snowflake not available")
     users = manager.get_nearby_users(latitude, longitude, radius_km)
-    return {"users": users}
+    return [UserLocationOut(**u) for u in users]
 
-@router.get("/nearby-ev-stores")
+@router.get("/nearby-ev-stores", response_model=List[EVStoreOut])
 def get_nearby_ev_stores(
-    latitude: float = Query(...),
-    longitude: float = Query(...),
-    radius_km: float = Query(10)
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_km: float = Query(10, gt=0, le=100)
 ):
-    """Get EV stores within a radius (km) of a location."""
     manager = get_snowflake_manager()
     if not manager:
         raise HTTPException(status_code=503, detail="Snowflake not available")
     stores = manager.get_nearby_ev_stores(latitude, longitude, radius_km)
-    return {"ev_stores": stores}
+    return [EVStoreOut(**s) for s in stores]
 
-@router.get("/nearby-floating-services")
+@router.get("/nearby-floating-services", response_model=List[FloatingServiceOut])
 def get_nearby_floating_services(
-    latitude: float = Query(...),
-    longitude: float = Query(...),
-    radius_km: float = Query(10)
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_km: float = Query(10, gt=0, le=100)
 ):
-    """Get floating services within a radius (km) of a location."""
     manager = get_snowflake_manager()
     if not manager:
         raise HTTPException(status_code=503, detail="Snowflake not available")
     services = manager.get_nearby_floating_services(latitude, longitude, radius_km)
-    return {"floating_services": services}
+    return [FloatingServiceOut(**s) for s in services]
+
+@router.websocket("/ws/user-locations")
+async def websocket_user_locations(websocket: WebSocket):
+    await websocket.accept()
+    active_connections.add(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # Broadcast received data to all clients
+            for conn in list(active_connections):
+                try:
+                    await conn.send_json(data)
+                except Exception:
+                    pass
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+    except Exception:
+        active_connections.remove(websocket)

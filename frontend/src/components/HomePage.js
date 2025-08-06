@@ -17,12 +17,6 @@ const HomePage = ({ user }) => {
     ecoScore: 85
   });
 
-  useEffect(() => {
-    // Fetch user data
-    fetchRecentSessions();
-    fetchRecommendations();
-  }, []);
-
   const fetchRecentSessions = async () => {
     try {
       const response = await fetch('http://localhost:8000/sessions');
@@ -46,6 +40,14 @@ const HomePage = ({ user }) => {
       console.error('Error fetching recommendations:', error);
     }
   };
+
+  
+  // Call both fetch functions when component mounts
+  useEffect(() => {
+    // Fetch user data
+    fetchRecentSessions();
+    fetchRecommendations();
+  }, [fetchRecentSessions, fetchRecommendations]);
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
