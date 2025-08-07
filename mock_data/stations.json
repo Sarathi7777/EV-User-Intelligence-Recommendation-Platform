@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "name": "Sundaram AMG Station",
+    "latitude": 10.91863,
+    "longitude": 76.98461,
+    "energy_type": "Level 2",
+    "available": true
+  }
+]

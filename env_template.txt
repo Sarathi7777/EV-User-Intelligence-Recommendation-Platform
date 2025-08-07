@@ -1,0 +1,15 @@
+# Copy this file to backend/.env and fill in your actual values
+
+# Snowflake Configuration (Update with your actual credentials)
+SNOWFLAKE_USER=your_snowflake_user
+SNOWFLAKE_PASSWORD=your_snowflake_password
+SNOWFLAKE_ACCOUNT=your_snowflake_account
+SNOWFLAKE_WAREHOUSE=your_warehouse
+SNOWFLAKE_DATABASE=your_database
+SNOWFLAKE_SCHEMA=your_schema
+
+# Open Charge Map API - Get your free API key from: https://openchargemap.io/site/develop/api
+OCM_API_KEY=your_openchargemap_api_key
+
+# ML Model Path
+RECOMMENDATION_MODEL_PATH=models/recommendation_model.pkl 
