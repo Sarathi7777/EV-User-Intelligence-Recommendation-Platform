@@ -17,9 +17,100 @@ class OpenChargeMapFetcher:
         self.base_url = "https://api.openchargemap.io/v3/poi"
         self.snowflake_manager = SnowflakeManager()
         
+        # Tamil Nadu bounding box coordinates (approximate)
+        self.tamil_nadu_bounds = {
+            "min_lat": 8.0883,  # Southernmost point
+            "max_lat": 13.7909,  # Northernmost point
+            "min_lon": 76.2276,  # Westernmost point
+            "max_lon": 80.2707   # Easternmost point
+        }
+        
         if not self.api_key:
             raise ValueError("OCM_API_KEY environment variable is required")
     
+    def is_within_tamil_nadu_bounds(self, lat: float, lon: float) -> bool:
+        """Check if coordinates are within Tamil Nadu bounding box."""
+        return (
+            self.tamil_nadu_bounds["min_lat"] <= lat <= self.tamil_nadu_bounds["max_lat"] and
+            self.tamil_nadu_bounds["min_lon"] <= lon <= self.tamil_nadu_bounds["max_lon"]
+        )
+    
+    def is_tamil_nadu_station(self, station_data: Dict[str, Any]) -> bool:
+        """Check if station is in Tamil Nadu using address information."""
+        address_info = station_data.get("AddressInfo", {})
+        
+        # Check state/province
+        state = address_info.get("StateOrProvince", "").lower()
+        if "tamil nadu" in state or "tamilnadu" in state:
+            return True
+        
+        # Check country
+        country = address_info.get("Country", {}).get("Title", "").lower()
+        if country != "india":
+            return False
+        
+        # Check coordinates
+        lat = address_info.get("Latitude", 0)
+        lon = address_info.get("Longitude", 0)
+        if lat and lon:
+            return self.is_within_tamil_nadu_bounds(float(lat), float(lon))
+        
+        return False
+    
+    def fetch_tamil_nadu_stations(self, max_results: int = 2000) -> List[Dict[str, Any]]:
+        """Fetch stations specifically from Tamil Nadu using multiple approaches."""
+        all_stations = []
+        
+        # Approach 1: Fetch by bounding box (multiple center points)
+        center_points = [
+            (11.0168, 76.9558),  # Coimbatore
+            (13.0827, 80.2707),  # Chennai
+            (9.9252, 78.1198),   # Madurai
+            (10.7905, 78.7047),  # Trichy
+            (11.2588, 75.7804),  # Calicut (nearby)
+            (8.0883, 77.5385),   # Kanyakumari
+            (12.9716, 79.1586),  # Vellore
+            (10.7905, 78.7047),  # Salem
+        ]
+        
+        logger.info("Fetching Tamil Nadu stations using multiple center points...")
+        
+        for lat, lon in center_points:
+            try:
+                stations = self.fetch_stations_by_location(lat, lon, radius_km=100, max_results=500)
+                all_stations.extend(stations)
+                logger.info(f"Fetched {len(stations)} stations from center point ({lat}, {lon})")
+                time.sleep(1)  # Rate limiting
+            except Exception as e:
+                logger.error(f"Error fetching from center point ({lat}, {lon}): {e}")
+        
+        # Approach 2: Fetch by country and filter
+        logger.info("Fetching Indian stations and filtering for Tamil Nadu...")
+        try:
+            indian_stations = self.fetch_stations_by_country("IN", max_results=1000)
+            all_stations.extend(indian_stations)
+            logger.info(f"Fetched {len(indian_stations)} stations from India")
+        except Exception as e:
+            logger.error(f"Error fetching Indian stations: {e}")
+        
+        # Remove duplicates based on OCM ID
+        unique_stations = {}
+        for station in all_stations:
+            station_id = station.get("ID")
+            if station_id and station_id not in unique_stations:
+                unique_stations[station_id] = station
+        
+        # Filter for Tamil Nadu stations
+        tamil_nadu_stations = []
+        for station in unique_stations.values():
+            if self.is_tamil_nadu_station(station):
+                tamil_nadu_stations.append(station)
+        
+        logger.info(f"Total unique stations: {len(unique_stations)}")
+        logger.info(f"Tamil Nadu stations after filtering: {len(tamil_nadu_stations)}")
+        
+        return tamil_nadu_stations[:max_results]
+
     def fetch_stations_by_country(self, country_code: str = "US", max_results: int = 1000) -> List[Dict[str, Any]]:
         """Fetch stations by country code with pagination."""
         all_stations = []
@@ -217,14 +308,14 @@ class OpenChargeMapFetcher:
         try:
             total_stations = self.snowflake_manager.get_station_count()
             
-            # Get stations by country
+            # Get stations by state (should be mostly Tamil Nadu)
             query = """
-                SELECT country, COUNT(*) as count 
+                SELECT state, COUNT(*) as count 
                 FROM stations 
-                GROUP BY country 
+                GROUP BY state 
                 ORDER BY count DESC
             """
-            country_stats = self.snowflake_manager.execute_query(query)
+            state_stats = self.snowflake_manager.execute_query(query)
             
             # Get stations by energy type
             query = """
@@ -235,16 +326,69 @@ class OpenChargeMapFetcher:
             """
             energy_type_stats = self.snowflake_manager.execute_query(query)
             
+            # Get stations by city/town
+            query = """
+                SELECT town, COUNT(*) as count 
+                FROM stations 
+                WHERE town IS NOT NULL AND town != ''
+                GROUP BY town 
+                ORDER BY count DESC
+                LIMIT 10
+            """
+            city_stats = self.snowflake_manager.execute_query(query)
+            
             return {
                 "total_stations": total_stations,
-                "by_country": country_stats,
-                "by_energy_type": energy_type_stats
+                "by_state": state_stats,
+                "by_energy_type": energy_type_stats,
+                "by_city": city_stats
             }
             
         except Exception as e:
             logger.error(f"Error getting statistics: {e}")
             return {}
     
+    def run_tamil_nadu_ingestion(self, max_stations: int = 2000) -> Dict[str, Any]:
+        """Run data ingestion specifically for Tamil Nadu stations."""
+        logger.info("Starting Tamil Nadu station ingestion...")
+        
+        try:
+            # Fetch Tamil Nadu stations
+            stations = self.fetch_tamil_nadu_stations(max_stations)
+            logger.info(f"Fetched {len(stations)} Tamil Nadu stations")
+            
+            # Parse station data
+            parsed_stations = []
+            for station in stations:
+                parsed = self.parse_station_data(station)
+                if parsed:
+                    parsed_stations.append(parsed)
+            
+            logger.info(f"Parsed {len(parsed_stations)} stations")
+            
+            # Store in Snowflake
+            stored_count = self.store_stations_in_snowflake(parsed_stations)
+            
+            # Get statistics
+            stats = self.get_station_statistics()
+            
+            results = {
+                "summary": {
+                    "total_fetched": len(stations),
+                    "total_parsed": len(parsed_stations),
+                    "total_stored": stored_count,
+                    "region": "Tamil Nadu, India"
+                },
+                "statistics": stats
+            }
+            
+            logger.info(f"Tamil Nadu ingestion complete: {len(stations)} fetched, {len(parsed_stations)} parsed, {stored_count} stored")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in Tamil Nadu ingestion: {e}")
+            raise
+
     def run_full_ingestion(self, countries: List[str] = None, max_stations_per_country: int = 1000) -> Dict[str, Any]:
         """Run complete data ingestion for multiple countries."""
         if countries is None:
@@ -312,18 +456,35 @@ def main():
         # Initialize the fetcher
         fetcher = OpenChargeMapFetcher()
         
-        # Run full ingestion
-        results = fetcher.run_full_ingestion()
+        # Run Tamil Nadu specific ingestion
+        results = fetcher.run_tamil_nadu_ingestion()
         
         # Save results to file
-        with open("ocm_ingestion_results.json", "w") as f:
+        with open("tamil_nadu_ocm_ingestion_results.json", "w") as f:
             json.dump(results, f, indent=2, default=str)
         
-        print("=== OCM Data Ingestion Complete ===")
+        print("=== Tamil Nadu OCM Data Ingestion Complete ===")
         print(f"Total stations fetched: {results['summary']['total_fetched']}")
+        print(f"Total stations parsed: {results['summary']['total_parsed']}")
         print(f"Total stations stored: {results['summary']['total_stored']}")
-        print(f"Countries processed: {results['summary']['countries_processed']}")
-        print("\nResults saved to: ocm_ingestion_results.json")
+        print(f"Region: {results['summary']['region']}")
+        print("\nResults saved to: tamil_nadu_ocm_ingestion_results.json")
+        
+        # Print statistics
+        if 'statistics' in results:
+            stats = results['statistics']
+            print(f"\nStatistics:")
+            print(f"Total stations in database: {stats.get('total_stations', 0)}")
+            
+            if 'by_state' in stats:
+                print("\nStations by State:")
+                for state_stat in stats['by_state'][:5]:
+                    print(f"  {state_stat['state']}: {state_stat['count']}")
+            
+            if 'by_city' in stats:
+                print("\nTop Cities:")
+                for city_stat in stats['by_city'][:5]:
+                    print(f"  {city_stat['town']}: {city_stat['count']}")
         
     except Exception as e:
         logger.error(f"Error in main execution: {e}")

@@ -282,7 +282,7 @@ const MapPage = ({ user }) => {
           <MapContainer 
             center={userLocation} 
             zoom={13} 
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '90%', width: '100%' }}
           >
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
@@ -623,7 +623,7 @@ const MapPage = ({ user }) => {
           {/* Map Legend */}
           <div style={{ 
             position: 'absolute', 
-            bottom: '20px', 
+            bottom: '100px', 
             left: '20px', 
             backgroundColor: 'white', 
             padding: '1rem', 
@@ -656,7 +656,7 @@ const MapPage = ({ user }) => {
               <div style={{ 
                 width: '12px', 
                 height: '12px', 
-                backgroundColor: '#007bff', 
+                backgroundColor: '#28a745', 
                 borderRadius: '50%', 
                 border: '2px solid #0056b3',
                 marginRight: '0.5rem' 
