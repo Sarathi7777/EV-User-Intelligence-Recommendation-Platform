@@ -399,7 +399,7 @@ This enhanced schema provides:
 5. **ML Features**: User clustering and recommendation storage
 6. **Audit Trail**: System monitoring and debugging
 7. **Performance**: Optimized indexes for fast queries
-8. **Scalability**: Designed for large-scale EV platform
+8. **Scalability**: Designed for large-scale EV User Intelligence
 
 To use this schema:
 1. Run this SQL in your Snowflake instance

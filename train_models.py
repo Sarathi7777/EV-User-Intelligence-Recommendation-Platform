@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Train ML models for the EV platform
+Train ML models for the EV User Intelligence
 """
 
 import os
@@ -66,7 +66,7 @@ def create_clustering_model():
     return kmeans, clusters
 
 def main():
-    print("🤖 Training ML Models for EV Platform")
+    print("🤖 Training ML Models for EV User Intelligence")
     print("=" * 50)
     
     # Train recommendation model

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for the EV Platform
+Test script for the EV User Intelligence
 """
 
 import requests
@@ -11,7 +11,7 @@ def test_backend():
     """Test the backend API endpoints."""
     base_url = "http://localhost:8000"
     
-    print("🧪 Testing EV Platform Backend")
+    print("🧪 Testing EV User Intelligence Backend")
     print("=" * 50)
     
     # Test 1: Get stations
@@ -89,7 +89,7 @@ def test_frontend():
         print(f"❌ Frontend test error: {e}")
 
 def main():
-    print("🚗 EV Platform Testing Suite")
+    print("🚗 EV User Intelligence Testing Suite")
     print("=" * 60)
     
     # Wait a moment for backend to start

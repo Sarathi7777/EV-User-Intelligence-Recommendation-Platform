@@ -28,7 +28,9 @@ const Navigation = ({ user, onLogout }) => {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#28a745' }}>
-          ⚡ EV Platform
+          <Link to="/home" style={{ textDecoration: 'none', color: '#28a745' }}>
+            ⚡ EV User Intelligence
+          </Link>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link to="/home" style={{ 

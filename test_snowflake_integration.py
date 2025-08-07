@@ -185,7 +185,7 @@ def test_api_integration():
 
 def run_all_tests():
     """Run all tests and provide summary."""
-    print("🚗 EV Platform - Snowflake Integration Test")
+    print("🚗 EV User Intelligence - Snowflake Integration Test")
     print("=" * 50)
     
     # Check if .env file exists

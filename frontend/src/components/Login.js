@@ -76,7 +76,7 @@ const Login = ({ onLogin }) => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* EV Platform Logo */}
+        {/* EV User Intelligence Logo */}
         <div style={{
           textAlign: 'center',
           marginBottom: '30px'
@@ -103,7 +103,7 @@ const Login = ({ onLogin }) => {
             color: '#2d3748',
             marginBottom: '5px'
           }}>
-            EV Platform
+            EV User Intelligence
           </h1>
           <p style={{
             margin: '0',

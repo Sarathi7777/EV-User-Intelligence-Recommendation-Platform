@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create mock data for testing the EV platform
+Create mock data for testing the EV User Intelligence
 """
 
 import json
@@ -134,7 +134,7 @@ def create_mock_sessions():
     return sessions
 
 def main():
-    print("📊 Creating Mock Data for EV Platform")
+    print("📊 Creating Mock Data for EV User Intelligence")
     print("=" * 50)
     
     create_mock_stations()

@@ -2,7 +2,7 @@
 
 ## ✅ **Project Status: FULLY FUNCTIONAL**
 
-Your complete EV platform is now running with:
+Your complete EV User Intelligence is now running with:
 - ✅ **Backend**: FastAPI server running on `http://localhost:8000`
 - ✅ **Frontend**: React app running on `http://localhost:3000`
 - ✅ **ML Models**: Trained recommendation and clustering models

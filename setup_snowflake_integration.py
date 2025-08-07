@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Snowflake Integration Setup Script for EV Platform
+Snowflake Integration Setup Script for EV User Intelligence
 ==================================================
 
 This script helps you:
@@ -199,7 +199,7 @@ def verify_integration() -> bool:
 
 def main():
     """Main setup function."""
-    print("🚗 EV Platform - Snowflake Integration Setup")
+    print("🚗 EV User Intelligence - Snowflake Integration Setup")
     print("=" * 50)
     
     # Check if .env file exists
@@ -258,7 +258,7 @@ def main():
     
     print("\n🎉 Setup Complete!")
     print("=" * 50)
-    print("Your EV platform is now connected to Snowflake and ready to use!")
+    print("Your EV User Intelligence is now connected to Snowflake and ready to use!")
     print("\nNext steps:")
     print("1. Start the backend: cd backend && python -m uvicorn app:app --reload")
     print("2. Start the frontend: cd frontend && npm start")

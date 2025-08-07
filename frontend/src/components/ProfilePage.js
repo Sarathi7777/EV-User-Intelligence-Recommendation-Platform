@@ -3,12 +3,12 @@ import Plot from 'react-plotly.js';
 
 const ProfilePage = ({ user }) => {
   const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
+    firstName: 'Peiii',
+    lastName: 'Minion',
     email: user.email,
-    phone: '+1 (555) 123-4567',
-    address: '123 EV Street, San Francisco, CA 94102',
-    memberSince: '2023-01-15',
+    phone: '+91 1234567890',
+    address: '123 EV Street, Coimbatore, Tamil Nadu 641022',
+    memberSince: '2025-01-15',
     totalSessions: 45,
     totalEnergy: 1250,
     averageSession: 28,

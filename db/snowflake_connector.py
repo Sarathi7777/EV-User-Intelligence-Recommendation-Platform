@@ -86,7 +86,7 @@ class SnowflakeManager:
                 cursor.close()
     
     def create_tables(self) -> None:
-        """Create all necessary tables for the EV platform."""
+        """Create all necessary tables for the EV User Intelligence."""
         tables = {
             'stations': """
                 CREATE TABLE IF NOT EXISTS stations (

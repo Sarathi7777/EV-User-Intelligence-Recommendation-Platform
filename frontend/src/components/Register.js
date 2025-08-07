@@ -158,7 +158,7 @@ const Register = ({ onLogin }) => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* EV Platform Logo */}
+        {/* EV User Intelligence Logo */}
         <div style={{
           textAlign: 'center',
           marginBottom: '30px'
@@ -185,7 +185,7 @@ const Register = ({ onLogin }) => {
             color: '#2d3748',
             marginBottom: '5px'
           }}>
-            Join EV Platform
+            Join EV User Intelligence
           </h1>
           <p style={{
             margin: '0',
@@ -219,7 +219,7 @@ const Register = ({ onLogin }) => {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                placeholder="John"
+                placeholder="Peiii"
                 required
                 style={{
                   width: '100%',
@@ -320,7 +320,7 @@ const Register = ({ onLogin }) => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="john.doe@example.com"
+                placeholder="peiiiminion@gmail.com"
                 required
                 style={{
                   width: '100%',

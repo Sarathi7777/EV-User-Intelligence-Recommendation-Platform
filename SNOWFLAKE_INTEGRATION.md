@@ -1,4 +1,4 @@
-# 🚗 EV Platform - Snowflake Integration Guide
+# 🚗 EV User Intelligence - Snowflake Integration Guide
 
 This guide explains how to connect your EV User Intelligence & Recommendation Platform to Snowflake and fetch real charging station data from the Open Charge Map API.
 
@@ -397,7 +397,7 @@ For issues and questions:
 
 ## 🎉 Success!
 
-Once configured, your EV platform will have:
+Once configured, your EV User Intelligence will have:
 
 - ✅ Real charging station data from 8+ countries
 - ✅ Enterprise-grade data storage with Snowflake

@@ -14,7 +14,9 @@ const LandingPage = () => {
         alignItems: 'center'
       }}>
         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#28a745' }}>
-          ⚡ EV Platform
+        <Link to="/" style={{ textDecoration: 'none', color: '#28a745' }}>
+            ⚡ EV User Intelligence
+          </Link>     
         </div>
         <div>
           <Link to="/login" style={{ 
@@ -77,7 +79,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <div style={{ padding: '4rem 2rem', backgroundColor: 'white' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '2.5rem' }}>
-          Why Choose EV Platform?
+          Why Choose EV User Intelligence?
         </h2>
         <div style={{ 
           display: 'grid', 
@@ -256,7 +258,7 @@ const LandingPage = () => {
           margin: '0 auto'
         }}>
           <div>
-            <h3>EV Platform</h3>
+            <h3>EV User Intelligence</h3>
             <p>Smart charging solutions for electric vehicle owners</p>
           </div>
           <div>
@@ -288,7 +290,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #6c757d' }}>
-          <p>&copy; 2024 EV Platform. All rights reserved.</p>
+          <p>&copy; 2025 EV User Intelligence. All rights reserved.</p>
         </div>
       </footer>
     </div>
