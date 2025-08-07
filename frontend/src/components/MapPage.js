@@ -14,7 +14,8 @@ const MapPage = ({ user }) => {
     availability: 'all',
     distance: 10,
     showUsers: true,
-    showNearby: true
+    showNearby: true,
+    nearestCount: 5 // Add nearestCount for top N stations
   });
   const [selectedStation, setSelectedStation] = useState(null);
   const [userLocation, setUserLocation] = useState([10.877185, 77.005055]);
@@ -49,7 +50,7 @@ const MapPage = ({ user }) => {
     setIsLoadingNearby(true);
     try {
       const response = await fetch(
-        `http://localhost:8000/stations/nearby?lat=${userLocation[0]}&lon=${userLocation[1]}&radius=${filters.distance}&use_ocm=true`
+        `http://localhost:8000/stations/nearby?lat=${userLocation[0]}&lon=${userLocation[1]}&radius=${filters.distance}&limit=${filters.nearestCount}&use_ocm=true`
       );
       if (response.ok) {
         const data = await response.json();
@@ -244,6 +245,18 @@ const MapPage = ({ user }) => {
               <option value={10}>10 km</option>
               <option value={20}>20 km</option>
               <option value={50}>50 km</option>
+            </select>
+            {/* Add nearestCount selector */}
+            <select
+              value={filters.nearestCount}
+              onChange={e => setFilters({...filters, nearestCount: parseInt(e.target.value)})}
+              style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+            >
+              <option value={1}>1 Nearest</option>
+              <option value={3}>3 Nearest</option>
+              <option value={5}>5 Nearest</option>
+              <option value={10}>10 Nearest</option>
+              <option value={20}>20 Nearest</option>
             </select>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input 
@@ -465,7 +478,7 @@ const MapPage = ({ user }) => {
                 </div>
               ) : (
                 <div>
-                  {getFilteredNearbyStations().slice(0, 10).map((station) => (
+                  {getFilteredNearbyStations().slice(0, filters.nearestCount).map((station) => (
                     <div 
                       key={station.id}
                       style={{
@@ -510,9 +523,9 @@ const MapPage = ({ user }) => {
                       </div>
                     </div>
                   ))}
-                  {getFilteredNearbyStations().length > 10 && (
+                  {getFilteredNearbyStations().length > filters.nearestCount && (
                     <div style={{ textAlign: 'center', padding: '1rem', color: '#6c757d', fontSize: '0.9rem' }}>
-                      Showing 10 of {getFilteredNearbyStations().length} stations
+                      Showing {filters.nearestCount} of {getFilteredNearbyStations().length} stations
                     </div>
                   )}
                 </div>

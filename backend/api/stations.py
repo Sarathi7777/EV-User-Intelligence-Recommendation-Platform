@@ -159,7 +159,8 @@ def get_nearby_stations(
     lon: float = Query(..., description="User's longitude"),
     radius: float = Query(10, description="Search radius in kilometers"),
     use_ocm: bool = Query(True, description="Use Open Charge Map API"),
-    use_snowflake: bool = Query(True, description="Use Snowflake database")
+    use_snowflake: bool = Query(True, description="Use Snowflake database"),
+    limit: int = Query(5, description="Number of nearest stations to return")
 ):
     """Get nearby charging stations with distance and time calculations."""
     try:
@@ -261,7 +262,7 @@ def get_nearby_stations(
         # Sort by distance
         nearby_stations.sort(key=lambda x: x.distance_km)
         
-        return nearby_stations[:20]  # Return top 20 nearest stations
+        return nearby_stations[:limit]  # Return top N nearest stations
         
     except Exception as e:
         print(f"Error getting nearby stations: {e}")
