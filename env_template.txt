@@ -1,12 +1,22 @@
-# Copy this file to backend/.env and fill in your actual values
-
-# Snowflake Configuration (Update with your actual credentials)
-SNOWFLAKE_USER=your_snowflake_user
-SNOWFLAKE_PASSWORD=your_snowflake_password
+# Database Configuration
+DATABASE_URL=your_database_url_here
 SNOWFLAKE_ACCOUNT=your_snowflake_account
-SNOWFLAKE_WAREHOUSE=your_warehouse
-SNOWFLAKE_DATABASE=your_database
-SNOWFLAKE_SCHEMA=your_schema
+SNOWFLAKE_USER=your_snowflake_username
+SNOWFLAKE_PASSWORD=your_snowflake_password
+SNOWFLAKE_WAREHOUSE=your_warehouse_name
+SNOWFLAKE_DATABASE=your_database_name
+SNOWFLAKE_SCHEMA=your_schema_name
+
+# JWT Configuration
+JWT_SECRET_KEY=your_jwt_secret_key_here
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Sentry Configuration
+SENTRY_DSN=your_sentry_dsn_here
+
+# OpenRouter API Configuration (for AI Chatbot)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 
 # Open Charge Map API - Get your free API key from: https://openchargemap.io/site/develop/api
 OCM_API_KEY=your_openchargemap_api_key

@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +8,11 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from api import stations, recommendations, sessions, users, admin, forecast
-from api import map_features
+from api import map_features, chatbot
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 # Sentry integration
 SENTRY_DSN = os.getenv('SENTRY_DSN')
@@ -39,3 +44,4 @@ app.include_router(users.router)
 app.include_router(admin.router)
 app.include_router(forecast.router)
 app.include_router(map_features.router)
+app.include_router(chatbot.router)

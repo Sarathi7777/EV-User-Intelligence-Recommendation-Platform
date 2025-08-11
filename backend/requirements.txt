@@ -12,3 +12,5 @@ httpx>=0.24
 pydantic-core
 pydantic[email]
 numpy
+openai>=1.0.0
+aiohttp>=3.8.0

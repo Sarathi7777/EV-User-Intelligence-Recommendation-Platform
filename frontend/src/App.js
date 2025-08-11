@@ -8,6 +8,8 @@ import SettingsPage from './components/SettingsPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminPanel from './components/AdminPanel';
+import ChatbotWidget from './components/ChatbotWidget';
+import ChatButton from './components/ChatButton';
 
 const Navigation = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -106,6 +108,7 @@ const Navigation = ({ user, onLogout }) => {
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Restore user from localStorage on mount
   useEffect(() => {
@@ -151,6 +154,19 @@ const App = () => {
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<HomePage user={user} />} />
         </Routes>
+        
+        {/* Chatbot Components */}
+        <ChatButton 
+          onClick={() => setIsChatbotOpen(!isChatbotOpen)} 
+          isOpen={isChatbotOpen} 
+        />
+        {isChatbotOpen && (
+          <ChatbotWidget 
+            isOpen={isChatbotOpen}
+            onToggle={() => setIsChatbotOpen(false)}
+            user={user}
+          />
+        )}
       </div>
     </Router>
   );

@@ -1,0 +1,104 @@
+# === Python ===
+_pycache_/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+*.env
+.env.
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Pyre type checker
+.pyre/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytest
+.cache/
+.pytest_cache/
+
+# coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# logs
+*.log
+
+# === Snowflake / Secrets ===
+*.pem
+*.key
+*.p12
+*.crt
+*.der
+*.env        # environment variables
+.env.local
+.env.*.local
+secrets.json
+snowflake_credentials.json
+
+# === VSCode ===
+.vscode/
+.code-workspace
+
+# === Mac OS ===
+.DS_Store
+
+# === System Files ===
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Node / Frontend (if using React, Vue, etc.) ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+*.tgz
+.pnpm-debug.log*
+
+# === Others ===
+*.sqlite3
+*.db
+*.pkl
+*.h5
+*.ckpt
+*.tflite
+*.onnx
+*.pt
+*.joblib
+*.model
+*.sav
+*.bak
+*.tmp
