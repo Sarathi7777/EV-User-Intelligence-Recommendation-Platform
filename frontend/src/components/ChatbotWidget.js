@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatbotWidget.css';
+import envConfig from '../env.config.js';
 
 const ChatbotWidget = ({ isOpen, onToggle, user }) => {
   const [messages, setMessages] = useState([
@@ -100,6 +101,61 @@ const ChatbotWidget = ({ isOpen, onToggle, user }) => {
     setMessages(prev => [...prev, newMessage]);
   };
 
+  const callOpenRouterDirectly = async (message, conversationHistory) => {
+    const openrouterApiKey = envConfig.OPENROUTER_API_KEY;
+    
+    if (!openrouterApiKey) {
+      throw new Error('OpenRouter API key not configured. Please set REACT_APP_OPENROUTER_API_KEY environment variable.');
+    }
+
+    console.log('Attempting direct OpenRouter API call with key:', openrouterApiKey.substring(0, 20) + '...');
+
+    const openrouterUrl = "https://openrouter.ai/api/v1/chat/completions";
+    
+    const systemPrompt = `You are an EV Assistant, a helpful AI specializing in electric vehicles and charging infrastructure. 
+    Help users with EV-related questions, charging station information, and recommendations. 
+    Be conversational, friendly, and provide practical, actionable advice.`;
+    
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      })),
+      { role: "user", content: message }
+    ];
+
+    const payload = {
+      model: "deepseek/deepseek-r1:free",
+      messages: messages,
+      max_tokens: 1000,
+      temperature: 0.7
+    };
+
+    console.log('Sending payload to OpenRouter:', payload);
+
+    const response = await fetch(openrouterUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterApiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'EV User Intelligence Platform'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenRouter API error:', response.status, errorText);
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('OpenRouter API response:', data);
+    return data.choices[0].message.content;
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -116,6 +172,8 @@ const ChatbotWidget = ({ isOpen, onToggle, user }) => {
     setLoading(true);
 
     try {
+      // First try the backend API
+      console.log('Attempting backend API call to /api/chatbot/chat');
       const response = await fetch('/api/chatbot/chat', {
         method: 'POST',
         headers: {
@@ -133,6 +191,7 @@ const ChatbotWidget = ({ isOpen, onToggle, user }) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Backend API response:', data);
         const botMessage = {
           id: Date.now() + 1,
           type: 'bot',
@@ -141,12 +200,33 @@ const ChatbotWidget = ({ isOpen, onToggle, user }) => {
         };
         setMessages(prev => [...prev, botMessage]);
       } else {
+        // If backend fails, try direct OpenRouter API call
         const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', response.status, errorData);
-        throw new Error(`API Error: ${response.status} - ${errorData.detail || 'Unknown error'}`);
+        console.error('Backend API failed:', response.status, errorData);
+        console.log('Backend API failed, trying direct OpenRouter API call...');
+        
+        try {
+          const conversationHistory = messages.slice(-5).map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            content: m.content
+          }));
+          
+          const aiResponse = await callOpenRouterDirectly(currentInput, conversationHistory);
+          
+          const botMessage = {
+            id: Date.now() + 1,
+            type: 'bot',
+            content: aiResponse,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+        } catch (openrouterError) {
+          console.error('OpenRouter API also failed:', openrouterError);
+          throw openrouterError; // Re-throw to fall back to static responses
+        }
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('All API calls failed, falling back to static responses:', error);
       
       // Try to provide a helpful response based on the user's input
       let helpfulResponse = "";
@@ -155,7 +235,7 @@ const ChatbotWidget = ({ isOpen, onToggle, user }) => {
       if (userInput.includes('coimbatore') || userInput.includes('location') || userInput.includes('where')) {
         helpfulResponse = "Great! Coimbatore is a beautiful city in Tamil Nadu. For charging stations in Coimbatore, I recommend checking:\n\n📍 **Popular areas with charging stations:**\n• Race Course area\n• RS Puram\n• Peelamedu\n• Saibaba Colony\n\n🔋 **Charging networks available:**\n• Tata Power\n• EESL (Energy Efficiency Services Limited)\n• Private stations\n\n💡 **Tip:** Use our station search feature to find real-time availability and plan your charging stops! Would you like me to help you with anything specific about EV charging in Coimbatore?";
       } else if (userInput.includes('charging') || userInput.includes('station')) {
-        helpfulResponse = "I'd be happy to help you find charging stations! To give you the best recommendations, could you tell me:\n\n📍 **Your current location or destination?**\n🔋 **What type of connector your EV uses?** (Type 2, CCS, CHAdeMO, etc.)\n⚡ **How fast you need to charge?** (Level 1, Level 2, or DC Fast)\n\nThis will help me provide more specific and useful information!";
+        helpfulResponse = "I'd be happy to help you find charging stations! To give you the best recommendations, could you tell me:\n\n📍 **Your current location or destination?**\n🔋 **What type of connector your EV uses?** (Type 2, CCS, CHAdeMO, etc.)\n⚡ **How fast you need to charge?** (Level 1, Level 2, or DC Fast)\n\nThis will help you provide more specific and useful information!";
       } else if (userInput.includes('ev') || userInput.includes('electric') || userInput.includes('car')) {
         helpfulResponse = "Electric vehicles are fantastic! 🚗⚡ Here are some key benefits:\n\n🌱 **Environmental:** Zero emissions, cleaner air\n💰 **Cost savings:** Lower fuel and maintenance costs\n🔋 **Technology:** Advanced features and smart connectivity\n\nWhat specific aspect of EVs would you like to learn more about? Charging, maintenance, models, or something else?";
       } else if (userInput.includes('battery') || userInput.includes('range')) {

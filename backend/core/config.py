@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # ML Model settings
     RECOMMENDATION_MODEL_PATH: str = os.getenv("RECOMMENDATION_MODEL_PATH", "models/lightfm_model.pkl")
     
+    # OpenRouter API settings (for AI Chatbot)
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    
     # API settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "EV User Intelligence & Recommendation Platform"

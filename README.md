@@ -11,8 +11,15 @@ A comprehensive electric vehicle charging platform with real-time station data, 
 - **Analytics Dashboard**: Energy consumption and usage insights
 - **Admin Panel**: Station and user management
 - **Forecasting**: Energy demand prediction and station usage analytics
+- **AI Chatbot**: Intelligent EV assistant powered by OpenRouter API
 
 ## 🚀 Quick Start
+
+### Prerequisites
+
+1. **OpenRouter API Key** (for AI Chatbot): Get from [OpenRouter](https://openrouter.ai/)
+2. **Open Charge Map API Key**: Get from [Open Charge Map](https://openchargemap.io/site/develop/api)
+3. **Snowflake Account**: For data warehouse storage
 
 ### Option 1: Automated Setup (Recommended)
 
@@ -26,6 +33,29 @@ This will guide you through:
 - Open Charge Map API setup
 - Database table creation
 - Initial data ingestion
+
+### Option 2: Manual Setup
+
+1. **Configure Environment**
+   ```bash
+   # Copy environment template
+   cp env_template.txt backend/.env
+   
+   # Edit backend/.env with your credentials
+   # - Snowflake credentials
+   # - Open Charge Map API key
+   # - OpenRouter API key (for AI chatbot)
+   ```
+
+2. **Set up OpenRouter API (AI Chatbot)**
+   ```bash
+   # Set environment variable
+   export OPENROUTER_API_KEY="sk-or-v1-your-api-key-here"
+   
+   # Test configuration
+   cd backend
+   python ../test_openrouter_config.py
+   ```
 
 ### Option 2: Manual Setup
 
@@ -98,6 +128,7 @@ UV-Cursor/
 │   │   ├── recommendations.py # ML recommendations
 │   │   ├── sessions.py     # Charging sessions
 │   │   ├── admin.py        # Admin panel
+│   │   ├── chatbot.py      # AI chatbot with OpenRouter integration
 │   │   └── forecast.py     # Energy demand prediction
 │   ├── core/               # Core utilities
 │   │   ├── config.py       # Configuration management

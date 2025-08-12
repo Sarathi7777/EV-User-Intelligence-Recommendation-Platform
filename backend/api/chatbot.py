@@ -6,6 +6,7 @@ import json
 import aiohttp
 from datetime import datetime
 import logging
+from core.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -104,7 +105,7 @@ Remember: Your goal is to be helpful, engaging, and to encourage users to explor
 
 async def call_openrouter_api(messages: List[dict]) -> str:
     """Call OpenRouter API to get AI response"""
-    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+    openrouter_api_key = settings.OPENROUTER_API_KEY
     
     # Debug logging
     logger.info(f"OpenRouter API key loaded: {'YES' if openrouter_api_key else 'NO'}")
@@ -265,7 +266,7 @@ async def get_chatbot_info():
 @router.get("/health")
 async def chatbot_health():
     """Health check endpoint for the chatbot service"""
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    openrouter_key = settings.OPENROUTER_API_KEY
     return {
         "status": "healthy",
         "openrouter_configured": bool(openrouter_key),
@@ -275,10 +276,9 @@ async def chatbot_health():
 @router.get("/debug")
 async def debug_environment():
     """Debug endpoint to check environment variables"""
-    import os
     return {
-        "openrouter_api_key_set": bool(os.getenv("OPENROUTER_API_KEY")),
-        "api_key_preview": os.getenv("OPENROUTER_API_KEY")[:20] + "..." if os.getenv("OPENROUTER_API_KEY") else "None",
+        "openrouter_api_key_set": bool(settings.OPENROUTER_API_KEY),
+        "api_key_preview": settings.OPENROUTER_API_KEY[:20] + "..." if settings.OPENROUTER_API_KEY else "None",
         "all_env_vars": {k: v for k, v in os.environ.items() if "OPENROUTER" in k.upper()},
         "current_working_dir": os.getcwd(),
         "env_file_exists": os.path.exists(".env")
