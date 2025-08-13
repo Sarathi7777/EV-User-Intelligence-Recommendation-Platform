@@ -6,6 +6,7 @@ import requests
 import math
 from typing import List, Optional
 from models.schemas import Station, NearbyStation
+# from backend.models.schemas import Station, NearbyStation
 
 # Add parent directory to path to access db module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

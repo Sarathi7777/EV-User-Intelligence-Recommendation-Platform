@@ -282,7 +282,7 @@ class SnowflakeManager:
     
     def get_station_count(self) -> int:
         """Get total number of stations in the database."""
-        query = "SELECT COUNT(*) as count FROM stations"
+        query = ('SELECT COUNT(*) AS "count" FROM stations')
         result = self.execute_query(query)
         return result[0]['count'] if result else 0
 

@@ -30,7 +30,7 @@ def test_snowflake_connection():
         from db.snowflake_connector import SnowflakeManager
         
         manager = SnowflakeManager()
-        result = manager.execute_query("SELECT CURRENT_VERSION() as version, CURRENT_USER() as user")
+        result = manager.execute_query('SELECT CURRENT_VERSION() AS "version", CURRENT_USER() AS "user"')
         
         if result:
             print(f"✅ Snowflake connection successful!")
@@ -143,7 +143,11 @@ def test_query_functionality():
         
         # Test station count
         count = manager.get_station_count()
-        print(f"✅ Station count: {count}")
+        if isinstance(count, dict):
+            count_value = count.get("count") or count.get("COUNT")
+        else:
+            count_value = count
+        print(f"✅ Station count: {count_value}")
         
         # Test getting stations
         stations = manager.get_stations(limit=5)
@@ -152,7 +156,8 @@ def test_query_functionality():
         # Test location-based query
         if stations:
             sample_station = stations[0]
-            lat, lon = sample_station['latitude'], sample_station['longitude']
+            lat = sample_station.get("latitude") or sample_station.get("LATITUDE")
+            lon = sample_station.get("longitude") or sample_station.get("LONGITUDE")
             nearby = manager.get_stations_by_location(lat, lon, 10)
             print(f"✅ Location query: {len(nearby)} stations within 10km")
         
@@ -161,6 +166,7 @@ def test_query_functionality():
     except Exception as e:
         print(f"❌ Query functionality test failed: {e}")
         return False
+
 
 def test_api_integration():
     """Test API integration."""
