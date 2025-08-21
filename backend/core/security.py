@@ -19,7 +19,7 @@ def get_user_by_email(email: str):
                 users_data = json.load(f)
             
             for user_data in users_data:
-                if user_data["email"] == email:
+                if user_data["email"].lower().strip() == email.lower().strip():
                     return type('User', (), {
                         'id': user_data["id"],
                         'email': user_data["email"],
@@ -32,8 +32,25 @@ def get_user_by_email(email: str):
         return None
 
 def create_user(email: str, password: str):
-    """Create a new user in mock data."""
+    """Create a new user in mock data and optionally in Snowflake database."""
     try:
+        # Try to save to Snowflake database first
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from db.snowflake_connector import get_snowflake_manager
+            
+            snowflake_manager = get_snowflake_manager()
+            password_hash = hash_password(password)
+            user_id = snowflake_manager.insert_user(email, password_hash, 0.0)
+            
+            if user_id:
+                print(f"User created in Snowflake with ID: {user_id}")
+        except Exception as e:
+            print(f"Could not save to Snowflake database: {e}")
+        
+        # Also save to mock data for backward compatibility
         mock_data_path = "mock_data/users.json"
         users = []
         if os.path.exists(mock_data_path):

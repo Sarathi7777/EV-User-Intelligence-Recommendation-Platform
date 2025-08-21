@@ -20,6 +20,11 @@ const Login = ({ onLogin }) => {
       
       if (res.ok) {
         const data = await res.json();
+        // Preserve names from backend; otherwise derive minimal display
+        if (!data.first_name && !data.firstName) {
+          const guess = (email || '').split('@')[0] || '';
+          data.first_name = guess;
+        }
         localStorage.setItem('user', JSON.stringify(data)); // persist user
         onLogin(data);
       } else {

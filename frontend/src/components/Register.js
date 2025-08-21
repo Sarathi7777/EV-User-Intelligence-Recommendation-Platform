@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import envConfig from "../env.config";
 
 const Register = ({ onLogin }) => {
   const navigate = useNavigate();
@@ -7,6 +8,7 @@ const Register = ({ onLogin }) => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     vehicleType: "",
@@ -64,6 +66,10 @@ const Register = ({ onLogin }) => {
       newErrors.vehicleType = "Please select your vehicle type";
     }
 
+    if (formData.phone && !/^\+?[0-9\-()\s]{7,20}$/.test(formData.phone)) {
+      newErrors.phone = "Please enter a valid phone number";
+    }
+
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = "You must agree to the terms and conditions";
     }
@@ -82,22 +88,51 @@ const Register = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
-      // For demo purposes, we'll simulate registration and auto-login
-      // In a real app, you'd send this to your registration endpoint
-      const mockUser = {
-        id: Math.floor(Math.random() * 1000) + 4,
-        email: formData.email,
-        eco_score: 0.0
-      };
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the real registration endpoint
+      const response = await fetch(`${envConfig.BACKEND_API_URL}/login/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          confirm_password: formData.confirmPassword,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          vehicle_type: formData.vehicleType,
+          phone: formData.phone
+        }),
+      });
+
+      if (!response.ok) {
+        let message = 'Registration failed';
+        try {
+          const ct = response.headers.get('content-type') || '';
+          if (ct.includes('application/json')) {
+            const errorData = await response.json();
+            message = errorData.detail || message;
+          } else {
+            message = (await response.text()) || message;
+          }
+        } catch {}
+        throw new Error(message);
+      }
+
+      const userData = await response.json();
+      // Attach first/last name for UI if backend doesn't return them
+      userData.first_name = userData.first_name || formData.firstName;
+      userData.last_name = userData.last_name || formData.lastName;
+      userData.phone = userData.phone || formData.phone;
       
       // Auto-login the user
-      onLogin(mockUser);
+      onLogin(userData);
       navigate('/home');
     } catch (error) {
-      alert("Registration failed. Please try again.");
+      console.error('Registration error:', error);
+      const message = (error && error.message) ? error.message : 'Registration failed. Please try again.';
+      alert(message);
     } finally {
       setIsLoading(false);
     }
@@ -357,6 +392,67 @@ const Register = ({ onLogin }) => {
                 color: '#e53e3e'
               }}>
                 {errors.email}
+              </p>
+            )}
+          </div>
+
+          {/* Mobile Number */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#4a5568'
+            }}>
+              Mobile Number (optional)
+            </label>
+            <div style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+1 (555) 123-4567"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: `2px solid ${errors.phone ? '#e53e3e' : '#e2e8f0'}`,
+                  borderRadius: '10px',
+                  fontSize: '16px',
+                  transition: 'all 0.3s ease',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#28a745';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = errors.phone ? '#e53e3e' : '#e2e8f0';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              <span style={{
+                position: 'absolute',
+                right: '12px',
+                color: '#a0aec0',
+                fontSize: '18px'
+              }}>
+                📱
+              </span>
+            </div>
+            {errors.phone && (
+              <p style={{
+                margin: '5px 0 0 0',
+                fontSize: '12px',
+                color: '#e53e3e'
+              }}>
+                {errors.phone}
               </p>
             )}
           </div>

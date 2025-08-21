@@ -27,7 +27,7 @@ const SettingsPage = ({ user }) => {
     },
     account: {
       email: user.email,
-      phone: '+1 (555) 123-4567',
+      phone: user.phone || '+1 (555) 123-4567',
       password: '••••••••',
       twoFactorAuth: false
     }

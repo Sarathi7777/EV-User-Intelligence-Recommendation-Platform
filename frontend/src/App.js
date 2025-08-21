@@ -86,7 +86,7 @@ const Navigation = ({ user, onLogout }) => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <span style={{ color: '#6c757d' }}>
-          Welcome, {user.email}
+          Welcome, {user.first_name || user.firstName || user.email}
         </span>
         <button 
           onClick={handleLogout}

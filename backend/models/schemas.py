@@ -29,11 +29,29 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=3, max_length=128)
 
+class UserRegistration(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=128)
+    confirm_password: str = Field(..., min_length=6, max_length=128)
+    first_name: str = Field(..., min_length=1, max_length=50)
+    last_name: str = Field(..., min_length=1, max_length=50)
+    vehicle_type: Optional[str] = Field(None, max_length=50)
+    phone: Optional[str] = Field(None, max_length=30)
+    
+    @validator('confirm_password')
+    def passwords_match(cls, v, values):
+        if 'password' in values and v != values['password']:
+            raise ValueError('Passwords do not match')
+        return v
+
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
     eco_score: float
     access_token: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
 
 class RecommendationResponse(BaseModel):
     user_id: int

@@ -56,7 +56,8 @@ class SnowflakeManager:
                 
                 # Fetch results
                 if cursor.description:
-                    columns = [desc[0] for desc in cursor.description]
+                    # Normalize column names to lowercase for consistent dict keys
+                    columns = [str(desc[0]).lower() for desc in cursor.description]
                     results = []
                     for row in cursor.fetchall():
                         results.append(dict(zip(columns, row)))
@@ -114,6 +115,10 @@ class SnowflakeManager:
                     email STRING UNIQUE,
                     password_hash STRING,
                     eco_score FLOAT DEFAULT 0.0,
+                    first_name STRING,
+                    last_name STRING,
+                    vehicle_type STRING,
+                    phone STRING,
                     created_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
                     updated_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
                 )
@@ -195,6 +200,15 @@ class SnowflakeManager:
             except Exception as e:
                 logger.error(f"Error creating table '{table_name}': {e}")
                 raise
+        
+        # Ensure new user profile columns exist (idempotent)
+        try:
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS first_name STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_name STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS vehicle_type STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS phone STRING")
+        except Exception as e:
+            logger.warning(f"Could not ensure user profile columns: {e}")
     
     def insert_station(self, station_data: Dict[str, Any]) -> None:
         """Insert a single station into the database."""
@@ -297,6 +311,74 @@ class SnowflakeManager:
             WHEN NOT MATCHED THEN INSERT (user_id, latitude, longitude, status, message, contact_method) VALUES (s.user_id, s.latitude, s.longitude, s.status, s.message, s.contact_method)
         '''
         self.execute_query(query, (user_id, latitude, longitude, status, message, contact_method))
+
+    # --- USER MANAGEMENT ---
+    def insert_user(self, email: str, password_hash: str, eco_score: float = 0.0, first_name: Optional[str] = None, last_name: Optional[str] = None, vehicle_type: Optional[str] = None, phone: Optional[str] = None) -> int:
+        """Insert a new user into the database and return the user ID."""
+        # Ensure columns exist (safe if already present)
+        try:
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS first_name STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_name STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS vehicle_type STRING")
+            self.execute_query("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS phone STRING")
+        except Exception:
+            pass
+
+        query = """
+            INSERT INTO users (email, password_hash, eco_score, first_name, last_name, vehicle_type, phone)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        self.execute_query(query, (email.lower(), password_hash, eco_score, first_name, last_name, vehicle_type, phone))
+        
+        # Get the inserted user ID
+        get_id_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
+        result = self.execute_query(get_id_query, (email,))
+        return result[0]['id'] if result else None
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Get user by email from the database."""
+        query = "SELECT * FROM users WHERE LOWER(email) = LOWER(%s)"
+        result = self.execute_query(query, (email,))
+        return result[0] if result else None
+
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user by ID from the database."""
+        query = "SELECT * FROM users WHERE id = %s"
+        result = self.execute_query(query, (user_id,))
+        return result[0] if result else None
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """Update user information."""
+        if not kwargs:
+            return
+        
+        set_clauses = []
+        params = []
+        
+        for key, value in kwargs.items():
+            if key in ['email', 'password_hash', 'eco_score', 'first_name', 'last_name', 'vehicle_type', 'phone']:
+                set_clauses.append(f"{key} = %s")
+                params.append(value)
+        
+        if set_clauses:
+            set_clauses.append("updated_at = CURRENT_TIMESTAMP()")
+            query = f"UPDATE users SET {', '.join(set_clauses)} WHERE id = %s"
+            params.append(user_id)
+            self.execute_query(query, tuple(params))
+
+    def delete_user(self, user_id: int) -> None:
+        """Delete a user from the database."""
+        # First delete related records
+        self.execute_query("DELETE FROM user_locations WHERE user_id = %s", (user_id,))
+        self.execute_query("DELETE FROM sessions WHERE user_id = %s", (user_id,))
+        
+        # Then delete the user
+        self.execute_query("DELETE FROM users WHERE id = %s", (user_id,))
+
+    def get_all_users(self, limit: int = 1000) -> List[Dict[str, Any]]:
+        """Get all users from the database."""
+        query = f"SELECT * FROM users ORDER BY created_at DESC LIMIT {limit}"
+        return self.execute_query(query)
 
     def get_nearby_users(self, latitude: float, longitude: float, radius_km: float = 10) -> list:
         """Get users within a radius (km) of a location."""

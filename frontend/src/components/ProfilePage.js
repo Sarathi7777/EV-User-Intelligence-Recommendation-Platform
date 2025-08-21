@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import React, { useState } from 'react';
+// import Plot from 'react-plotly.js';
 
 const ProfilePage = ({ user }) => {
-  const [profile, setProfile] = useState({
-    firstName: 'Peiii',
-    lastName: 'Minion',
+  const nameFromEmail = (user.email || '').split('@')[0] || '';
+  const [profile] = useState({
+    firstName: user.first_name || user.firstName || nameFromEmail,
+    lastName: user.last_name || user.lastName || '',
     email: user.email,
-    phone: '+91 1234567890',
+    phone: user.phone || '+91 1234567890',
     address: '123 EV Street, Coimbatore, Tamil Nadu 641022',
     memberSince: '2025-01-15',
     totalSessions: 45,
@@ -17,7 +18,7 @@ const ProfilePage = ({ user }) => {
     favoriteStations: [1, 3, 5]
   });
 
-  const [vehicles, setVehicles] = useState([
+  const [vehicles] = useState([
     {
       id: 1,
       make: 'Tesla',
@@ -38,7 +39,7 @@ const ProfilePage = ({ user }) => {
     }
   ]);
 
-  const [chargingHistory, setChargingHistory] = useState([
+  const [chargingHistory] = useState([
     {
       id: 1,
       station: 'Downtown Charging Station',
@@ -65,7 +66,7 @@ const ProfilePage = ({ user }) => {
     }
   ]);
 
-  const [achievements, setAchievements] = useState([
+  const [achievements] = useState([
     { id: 1, name: 'First Charge', description: 'Completed your first charging session', earned: '2023-01-15', icon: '⚡' },
     { id: 2, name: 'Eco Warrior', description: 'Saved 100kg of CO2', earned: '2023-03-20', icon: '🌱' },
     { id: 3, name: 'Regular Charger', description: 'Completed 10 charging sessions', earned: '2023-05-10', icon: '🔋' },
