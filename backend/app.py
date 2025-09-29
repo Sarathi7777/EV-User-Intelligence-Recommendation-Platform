@@ -9,6 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from api import stations, recommendations, sessions, users, admin, forecast
 from api import map_features, chatbot
+from api import realtime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,3 +46,19 @@ app.include_router(admin.router)
 app.include_router(forecast.router)
 app.include_router(map_features.router)
 app.include_router(chatbot.router)
+app.include_router(realtime.router)
+
+# Startup tasks: begin Kafka consumers if available and run as background tasks
+@app.on_event("startup")
+async def startup_event():
+    try:
+        from api.realtime import start_kafka_home_consumer, start_kafka_location_consumer
+        import asyncio
+        home_runner = await start_kafka_home_consumer()
+        loc_runner = await start_kafka_location_consumer()
+        if home_runner:
+            asyncio.create_task(home_runner())
+        if loc_runner:
+            asyncio.create_task(loc_runner())
+    except Exception as e:
+        print(f"Kafka consumers not started: {e}")

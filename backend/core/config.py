@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     
     # CORS settings
     BACKEND_CORS_ORIGINS: list = ["*"]
+
+    # Kafka settings for realtime
+    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+    KAFKA_HOME_TOPIC: str = os.getenv("KAFKA_HOME_TOPIC", "ev.home.events")
+    KAFKA_LOCATION_TOPIC: str = os.getenv("KAFKA_LOCATION_TOPIC", "ev.user.locations")
     
     class Config:
         env_file = ".env"

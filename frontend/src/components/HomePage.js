@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Plot from 'react-plotly.js';
 
@@ -16,6 +16,8 @@ const HomePage = ({ user }) => {
     averageSession: 28,
     ecoScore: 85
   });
+
+  const wsRef = useRef(null);
 
   const fetchRecentSessions = async () => {
     try {
@@ -47,7 +49,33 @@ const HomePage = ({ user }) => {
     // Fetch user data
     fetchRecentSessions();
     fetchRecommendations();
-  }, [fetchRecentSessions, fetchRecommendations]);
+    // Open realtime websocket for home feed
+    try {
+      const ws = new WebSocket('ws://localhost:8000/realtime/home');
+      wsRef.current = ws;
+      ws.onmessage = (evt) => {
+        try {
+          const payload = JSON.parse(evt.data);
+          if (payload.type === 'session_created' && payload.session) {
+            setRecentSessions(prev => [payload.session, ...prev].slice(0, 10));
+          }
+        } catch (e) {
+          // ignore malformed
+        }
+      };
+      ws.onopen = () => {
+        // optional ping
+      };
+      ws.onerror = () => {};
+    } catch (e) {
+      console.error('WS init failed', e);
+    }
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

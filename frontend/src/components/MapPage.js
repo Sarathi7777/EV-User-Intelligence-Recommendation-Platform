@@ -18,14 +18,42 @@ const MapPage = ({ user }) => {
     nearestCount: 5 // Add nearestCount for top N stations
   });
   const [selectedStation, setSelectedStation] = useState(null);
-  const [userLocation, setUserLocation] = useState([10.877185, 77.005055]);
+  const [userLocation, setUserLocation] = useState([10.882843, 77.007964]);
   const [isLoadingNearby, setIsLoadingNearby] = useState(false);
+  const wsRef = useRef(null);
 
 
   useEffect(() => {
     fetchStations();
     fetchUsers();
     getUserLocation();
+    // connect map websocket for sending location and receiving others
+    try {
+      const ws = new WebSocket(`ws://localhost:8000/realtime/map/${user.id}`);
+      wsRef.current = ws;
+      ws.onmessage = (evt) => {
+        try {
+          const payload = JSON.parse(evt.data);
+          if (payload.type === 'location_update' && payload.user_id && payload.location) {
+            setUsers(prev => {
+              const now = new Date().toISOString();
+              const others = prev.filter(u => String(u.id) !== String(payload.user_id));
+              return [
+                ...others,
+                { id: payload.user_id, name: payload.name || `user-${payload.user_id}`, email: payload.name || `user-${payload.user_id}`, eco_score: 0, location: payload.location, lastSeen: now }
+              ];
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      console.error('WS connect error', e);
+    }
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+    };
   }, []);
 
   useEffect(() => {
@@ -46,6 +74,39 @@ const MapPage = ({ user }) => {
     }
   };
 
+  // prune stale users who haven't updated recently (e.g., 20s)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const cutoff = Date.now() - 20000;
+      setUsers(prev => prev.filter(u => {
+        if (!u.lastSeen) return false;
+        return new Date(u.lastSeen).getTime() >= cutoff;
+      }));
+    }, 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  const formatAgo = (iso) => {
+    if (!iso) return '';
+    const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    return `${m}m ago`;
+  };
+
+  const distanceKm = (from, to) => {
+    if (!from || !to) return null;
+    const [lat1, lon1] = from; const [lat2, lon2] = to;
+    const toRad = (x) => x * Math.PI / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    const c = 2 * Math.asin(Math.sqrt(a));
+    return R * c;
+  };
+
   const fetchNearbyStations = async () => {
     setIsLoadingNearby(true);
     try {
@@ -64,23 +125,8 @@ const MapPage = ({ user }) => {
   };
 
   const fetchUsers = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/admin/users');
-      if (response.ok) {
-        const data = await response.json();
-        // Mock user locations around the map
-        const mockUsers = data.map((user, index) => ({
-          ...user,
-          location: [
-            10.877185 + (Math.random() - 0.5) * 0.1,
-            77.005055 + (Math.random() - 0.5) * 0.1
-          ]
-        }));
-        setUsers(mockUsers);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
+    // No initial mock users; users appear when location updates arrive via WebSocket
+    setUsers([]);
   };
 
   const getUserLocation = () => {
@@ -88,6 +134,16 @@ const MapPage = ({ user }) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setUserLocation([position.coords.latitude, position.coords.longitude]);
+          // send initial location
+          try {
+            if (wsRef.current && wsRef.current.readyState === 1) {
+              wsRef.current.send(JSON.stringify({
+                location: [position.coords.latitude, position.coords.longitude],
+                name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : (user?.email?.split('@')[0] || `user-${user?.id}`),
+                timestamp: new Date().toISOString()
+              }));
+            }
+          } catch {}
         },
         (error) => {
           console.log('Error getting location:', error);
@@ -95,6 +151,22 @@ const MapPage = ({ user }) => {
       );
     }
   };
+
+  // periodically push location to backend
+  useEffect(() => {
+    const id = setInterval(() => {
+      try {
+        if (wsRef.current && wsRef.current.readyState === 1) {
+          wsRef.current.send(JSON.stringify({
+            location: userLocation,
+            name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : (user?.email?.split('@')[0] || `user-${user?.id}`),
+            timestamp: new Date().toISOString()
+          }));
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(id);
+  }, [userLocation]);
 
   const getFilteredStations = () => {
     return stations.filter(station => {
@@ -532,6 +604,55 @@ const MapPage = ({ user }) => {
               )}
             </div>
           )}
+
+          {/* Online Users Panel */}
+          <div style={{ 
+            position: 'absolute', 
+            top: '30px', 
+            right: '20px', 
+            backgroundColor: 'white', 
+            padding: '1rem', 
+            borderRadius: '8px', 
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            maxWidth: '320px',
+            maxHeight: '40vh',
+            overflowY: 'auto',
+            zIndex: 1000
+          }}>
+            <h4 style={{ margin: '0 0 0.5rem 0' }}>Online Users ({users.length})</h4>
+            {users.length === 0 ? (
+              <div style={{ color: '#6c757d' }}>No other users online</div>
+            ) : (
+              <div>
+                {users
+                  .filter(u => String(u.id) !== String(user.id))
+                  .map(u => (
+                  <div key={u.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    borderBottom: '1px solid #e9ecef',
+                    padding: '0.5rem 0'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{u.email}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                        {formatAgo(u.lastSeen)}
+                        {u.location && userLocation && (
+                          <>
+                            {' '}• {distanceKm(userLocation, u.location)?.toFixed(2)} km away
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ 
+                      width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ffc107' 
+                    }}></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Station Details Panel */}
           {selectedStation && (
