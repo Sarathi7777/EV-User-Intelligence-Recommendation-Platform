@@ -10,12 +10,12 @@
 ### 2. **Backend Environment Variable Missing** ✅ FIXED
 - **Problem**: `OPENROUTER_API_KEY` not set in backend environment
 - **Solution**: Set environment variable in PowerShell
-- **Command**: `$env:OPENROUTER_API_KEY="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"`
+- **Command**: `$env:OPENROUTER_API_KEY="#"`
 
 ### 3. **Frontend Environment Variable Missing** ✅ FIXED
 - **Problem**: `REACT_APP_OPENROUTER_API_KEY` not set in frontend
 - **Solution**: Set environment variable in PowerShell
-- **Command**: `$env:REACT_APP_OPENROUTER_API_KEY="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"`
+- **Command**: `$env:REACT_APP_OPENROUTER_API_KEY="#"`
 
 ### 4. **Backend Server Not Running** ✅ FIXED
 - **Problem**: Backend server wasn't started
@@ -37,14 +37,14 @@
 ### Backend Setup
 ```powershell
 cd backend
-$env:OPENROUTER_API_KEY="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"
+$env:OPENROUTER_API_KEY="#"
 python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend Setup
 ```powershell
 cd frontend
-$env:REACT_APP_OPENROUTER_API_KEY="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"
+$env:REACT_APP_OPENROUTER_API_KEY="#"
 $env:REACT_APP_BACKEND_API_URL="http://localhost:8000"
 npm start
 ```
@@ -53,12 +53,12 @@ npm start
 
 ### Backend (.env file in backend/ directory)
 ```env
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=
 ```
 
 ### Frontend (.env file in frontend/ directory)
 ```env
-REACT_APP_OPENROUTER_API_KEY=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
+REACT_APP_OPENROUTER_API_KEY=
 REACT_APP_BACKEND_API_URL=http://localhost:8000
 ```
 
