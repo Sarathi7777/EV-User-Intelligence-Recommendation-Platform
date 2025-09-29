@@ -7,8 +7,15 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
-from api import stations, recommendations, sessions, users, admin, forecast
-from api import map_features, chatbot
+# Support running from repo root (preferred) and from backend/ dir
+try:
+    from backend.api import stations, recommendations, sessions, users, admin, forecast
+    from backend.api import map_features, chatbot
+    from backend.api import realtime
+except ImportError:
+    from api import stations, recommendations, sessions, users, admin, forecast
+    from api import map_features, chatbot
+    from api import realtime
 from api import realtime
 
 # Load environment variables from .env file
@@ -52,7 +59,10 @@ app.include_router(realtime.router)
 @app.on_event("startup")
 async def startup_event():
     try:
-        from api.realtime import start_kafka_home_consumer, start_kafka_location_consumer
+        try:
+            from backend.api.realtime import start_kafka_home_consumer, start_kafka_location_consumer
+        except ImportError:
+            from api.realtime import start_kafka_home_consumer, start_kafka_location_consumer
         import asyncio
         home_runner = await start_kafka_home_consumer()
         loc_runner = await start_kafka_location_consumer()

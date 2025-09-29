@@ -60,7 +60,10 @@ def log_session(session: UserSession):
 
         # Also broadcast directly to WebSocket home clients (works without Kafka)
         try:
-            from api.realtime import manager as realtime_manager
+            try:
+                from backend.api.realtime import manager as realtime_manager
+            except ImportError:
+                from api.realtime import manager as realtime_manager
             async def _broadcast():
                 await realtime_manager.broadcast_home({
                     "type": "session_created",
